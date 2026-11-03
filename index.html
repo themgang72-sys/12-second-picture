@@ -1,93 +1,91 @@
-<!doctype html>
-<html lang="fa" dir="rtl">
+<!DOCTYPE html>
+<html lang="fa">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#000">
-<title>پخش قرآن</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>12 Second Picture</title>
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden}
-body{display:flex;align-items:center;justify-content:center}
-#play{border:0;border-radius:8px;background:#159447;color:#fff;padding:10px 18px;font:600 15px sans-serif;cursor:pointer}
-#play:disabled{opacity:1;cursor:wait}
-#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000}
-#stage[hidden]{display:none}
-#poster{width:100%;height:100%;object-fit:contain}
-#audio{display:none}
-#status{position:fixed;bottom:18px;left:12px;right:12px;color:#fff;text-align:center;font:14px sans-serif}
-#status:empty{display:none}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: black;
+  overflow: hidden;
+}
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#play {
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  background: #159447;
+  cursor: pointer;
+}
+#stage {
+  position: fixed;
+  inset: 0;
+  background: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#stage[hidden] { display: none; }
+#poster {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 </style>
 </head>
 <body>
-<button id="play" type="button" disabled>پخش قرآن</button>
-<main id="stage" hidden><img id="poster" alt=""></main>
-<audio id="audio" preload="auto" playsinline></audio>
-<div id="status" role="status" aria-live="polite"></div>
+
+<button id="play" aria-label="شروع"></button>
+
+<div id="stage" hidden>
+  <img id="poster"
+  src="./file_00000000d6e48243adcdcd8bb099c261.png">
+</div>
+
+<audio id="audio" src="./music.mp3" preload="auto"></audio>
+
 <script>
-(()=>{
-  const button=document.getElementById('play');
-  const stage=document.getElementById('stage');
-  const poster=document.getElementById('poster');
-  const audio=document.getElementById('audio');
-  const status=document.getElementById('status');
-  let ready=false,playing=false,timer=null;
+const button = document.getElementById("play");
+const stage = document.getElementById("stage");
+const audio = document.getElementById("audio");
 
-  async function loadAssets(){
-    button.disabled=true;
-    try{
-      const response=await fetch('./12-second-picture-standalone.html',{cache:'no-store'});
-      if(!response.ok) throw new Error('asset fetch failed');
-      const source=await response.text();
-      const imageMatch=source.match(/<img\b[^>]*\bid=["']poster["'][^>]*\bsrc=["']([^"']+)["']/i);
-      const audioMatch=source.match(/<audio\b[^>]*\bid=["']music["'][^>]*\bsrc=["']([^"']+)["']/i);
-      if(!imageMatch||!audioMatch) throw new Error('embedded media not found');
-      poster.src=imageMatch[1];
-      audio.src=audioMatch[1];
-      audio.load();
-      if(poster.decode) await poster.decode();
-      ready=true;
-      button.disabled=false;
-      status.textContent='';
-    }catch(error){
-      button.disabled=false;
-      status.textContent='بارگذاری انجام نشد؛ دوباره روی دکمه بزن.';
-    }
+let started = false;
+
+button.addEventListener("click", async () => {
+  if (started) return;
+
+  started = true;
+  button.hidden = true;
+  stage.hidden = false;
+
+  try {
+    audio.currentTime = 0;
+    await audio.play();
+  } catch (error) {
+    stage.hidden = true;
+    button.hidden = false;
+    started = false;
+    return;
   }
 
-  function reset(){
-    if(timer!==null){clearTimeout(timer);timer=null;}
+  setTimeout(() => {
     audio.pause();
-    try{audio.currentTime=0;}catch(error){}
-    stage.hidden=true;
-    button.hidden=false;
-    playing=false;
-  }
-
-  button.addEventListener('click',()=>{
-    if(playing)return;
-    if(!ready){loadAssets();return;}
-    playing=true;
-    button.hidden=true;
-    stage.hidden=false;
-    status.textContent='';
-    try{audio.currentTime=0;}catch(error){}
-    const playRequest=audio.play();
-    timer=setTimeout(reset,12000);
-    if(playRequest&&typeof playRequest.catch==='function'){
-      playRequest.catch(()=>{
-        reset();
-        status.textContent='پخش صدا شروع نشد؛ دوباره امتحان کن.';
-      });
-    }
-  });
-
-  loadAssets();
-  window.addEventListener('pagehide',()=>{
-    if(timer!==null)clearTimeout(timer);
-    audio.pause();
-  });
-})();
+    audio.currentTime = 0;
+    stage.hidden = true;
+    button.hidden = false;
+    started = false;
+  }, 12000);
+});
 </script>
+
 </body>
 </html>
